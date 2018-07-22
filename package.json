@@ -1,0 +1,22 @@
+{
+  "name": "android-remote-debugger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amirs7/ARD.git"
+  },
+  "keywords": [
+    "Android"
+  ],
+  "author": "Amir Hossein Seyhani <aseyhani@icloud.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amirs7/ARD/issues"
+  },
+  "homepage": "https://github.com/amirs7/ARD#readme"
+}
