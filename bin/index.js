@@ -5,6 +5,17 @@ const { install, update, restart, flushLogs, stopLog, liveLog } = require('../li
 const { connect, connectOverWIFI, connectOverWIFIWithIP } = require('../lib/connect');
 const { logger } = require('../lib/utils');
 const config = require('../lib/config');
+let helpMessage = 'Available Commands:\n' +
+  ' i, install\t remove the package from device and install it again\n' +
+  ' u, update\t install the application preserving data and settings\n' +
+  ' r, restart\t restart the application\n' +
+  ' c, connect\t connect to the device over wifi\n' +
+  ' w, watch\t enter watch mode\n' +
+  ' ew, end watch\t end watch mode\n' +
+  ' cw, connect wifi\t connect to the device only over wifi\n' +
+  ' f, flush\t flush all logs\n' +
+  ' ll\t monitor logs\n';
+
 run();
 
 function run() {
@@ -56,29 +67,28 @@ let watching = false;
 
 async function watch() {
   return new Promise(async (resolve,reject) => {
-    watching = true;
-    await liveLog('SystemWebChromeClient');
+    try {
+      watching = true;
+      await install();
+      await restart();
+      await liveLog('SystemWebChromeClient');
+    } catch (error) {
+      watching = false;
+      logger.error(error.message);
+      logger.hint(error.hint);
+    }
   });
 }
 async function endWatch() {
-  return new Promise(async (resolve,reject) => {
+  return new Promise(async(resolve, reject) => {
     watching = false;
     await stopLog();
     resolve()
   });
 }
+
 function handleInputs() {
   process.stdin.on('data', async function(data) {
-    let helpMessage = 'Available Commands:\n' +
-      ' i, install\t remove the package from device and install it again\n' +
-      ' u, update\t install the application preserving data and settings\n' +
-      ' r, restart\t restart the application\n' +
-      ' c, connect\t connect to the device over wifi\n' +
-      ' w, watch\t enter watch mode\n' +
-      ' ew, end watch\t end watch mode\n' +
-      ' cw, connect wifi\t connect to the device only over wifi\n' +
-      ' f, flush\t flush all logs\n' +
-      ' ll\t monitor logs\n';
     return new Promise(async(resolve, reject) => {
       let command = data.toString().trim();
       try {
@@ -158,6 +168,10 @@ function setup() {
   process.argv.forEach((arg, index, array) => {
     if (arg === '--debug') {
       global.loggingLevel = 'debug';
+    }
+    if (arg === '--help') {
+      console.log(helpMessage);
+      process.exit();
     }
     if (arg === '-p') {
       global.packageAbsolutePath = array[index + 1];
