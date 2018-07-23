@@ -46,3 +46,11 @@ Finally you can start your application on the device with following command:
 
 After each build you can simply enter the following command to install and restart it:
 > ir
+
+### Watch Mode:
+
+You can use the following command to enter watch mode:
+> watch
+In this mode if any changes occurs in the apk file pass the installation, restarting and logging cycles automatically.
+To exit from watch mode enter the following command:
+> end watch

@@ -38,10 +38,35 @@ function run() {
     + ` Package Path:\t${global.packageAbsolutePath}\n`
     + ` Using IP:\t${global.deviceIP ? global.deviceIP : 'No'}\n`
     + ` Server Port:\t${global.ADBPort ? global.ADBPort : 'Default'}\n`);
-
+  fs.watchFile(global.packageAbsolutePath, {}, async(event) => {
+    if (watching) {
+      try {
+        await install();
+        await restart();
+      } catch (error) {
+        logger.error(error.message);
+        logger.hint(error.hint);
+      }
+    } else {
+    }
+  });
   handleInputs();
 }
+let watching = false;
 
+async function watch() {
+  return new Promise(async (resolve,reject) => {
+    watching = true;
+    await liveLog('SystemWebChromeClient');
+  });
+}
+async function endWatch() {
+  return new Promise(async (resolve,reject) => {
+    watching = false;
+    await stopLog();
+    resolve()
+  });
+}
 function handleInputs() {
   process.stdin.on('data', async function(data) {
     let helpMessage = 'Available Commands:\n' +
@@ -49,6 +74,8 @@ function handleInputs() {
       ' u, update\t install the application preserving data and settings\n' +
       ' r, restart\t restart the application\n' +
       ' c, connect\t connect to the device over wifi\n' +
+      ' w, watch\t enter watch mode\n' +
+      ' ew, end watch\t end watch mode\n' +
       ' cw, connect wifi\t connect to the device only over wifi\n' +
       ' f, flush\t flush all logs\n' +
       ' ll\t monitor logs\n';
@@ -67,6 +94,14 @@ function handleInputs() {
           case 'restart':
           case 'r':
             await restart();
+            break;
+          case 'watch':
+          case 'w':
+            await watch();
+            break;
+          case 'end watch':
+          case 'ew':
+            await endWatch();
             break;
           case 'connect':
           case 'c':
