@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const path = require('path');
 const fs = require('fs');
-const { install, restart, flushLogs, log } = require('../lib/build');
+const { install, update, restart, flushLogs, stopLog, liveLog } = require('../lib/build');
 const { connect, connectOverWIFI, connectOverWIFIWithIP } = require('../lib/connect');
 const { logger } = require('../lib/utils');
 const config = require('../lib/config');
@@ -13,32 +13,31 @@ function run() {
 
   setup();
 
-  if(!global.packageName){
+  if (!global.packageName) {
     console.log('\x1b[31m%s\x1b[0m', 'Package Name not Specified');
     process.exit();
   }
-  if(!global.packageAbsolutePath){
+  if (!global.packagePath) {
     console.log('\x1b[31m%s\x1b[0m', 'Package .apk File Path not Specified');
     process.exit();
   }
-  let packageAbsolutePath = global.packageAbsolutePath;
-  if (global.packageAbsolutePath[0] !== '/'){
-    global.packageAbsolutePath = path.join(process.cwd(),global.packageAbsolutePath);
+  if (global.packagePath[0] !== '/') {
+    global.packageAbsolutePath = path.join(process.cwd(), global.packagePath);
   }
-  if(!global.packageAbsolutePath.includes('.apk')){
+  if (!global.packageAbsolutePath.includes('.apk')) {
     console.log('\x1b[33m%s\x1b[0m', 'Warning: Package File is not .apk');
   }
-  if(!fs.existsSync(global.packageAbsolutePath)){
+  if (!fs.existsSync(global.packageAbsolutePath)) {
     console.log('\x1b[33m%s\x1b[0m', 'Warning: Package File not Exists at Specified Path');
   }
 
 
-  console.log('\x1b[36m%s\x1b[0m', 'Debugger Started');
-  console.log('\x1b[36m%s\x1b[0m', `Configuration:\n`
+  logger.success('Debugger Started');
+  logger.info(`Configuration:\n`
     + ` Package Name:\t${global.packageName}\n`
     + ` Package Path:\t${global.packageAbsolutePath}\n`
-    + ` Using IP:\t${global.deviceIP?global.deviceIP:'No'}\n`
-    + ` Server Port:\t${global.ADBPort?global.ADBPort:'Default'}\n`);
+    + ` Using IP:\t${global.deviceIP ? global.deviceIP : 'No'}\n`
+    + ` Server Port:\t${global.ADBPort ? global.ADBPort : 'Default'}\n`);
 
   handleInputs();
 }
@@ -46,31 +45,34 @@ function run() {
 function handleInputs() {
   process.stdin.on('data', async function(data) {
     let helpMessage = 'Available Commands:\n' +
-      ' i\t remove the package from device and install it again\n' +
-      ' r\t restart the application\n' +
-      ' c\t connect to the device over wifi\n' +
-      ' cw\t connect to the device only over wifi\n' +
-      ' f\t flush all logs\n' +
-      ' l\t monitor logs\n';
+      ' i, install\t remove the package from device and install it again\n' +
+      ' u, update\t install the application preserving data and settings\n' +
+      ' r, restart\t restart the application\n' +
+      ' c, connect\t connect to the device over wifi\n' +
+      ' cw, connect wifi\t connect to the device only over wifi\n' +
+      ' f, flush\t flush all logs\n' +
+      ' ll\t monitor logs\n';
     return new Promise(async(resolve, reject) => {
       let command = data.toString().trim();
       try {
         switch (command) {
+          case 'install':
           case 'i':
             await install();
             break;
+          case 'update':
+          case 'u':
+            await update();
+            break;
+          case 'restart':
           case 'r':
             await restart();
             break;
-          case 'f':
-            await flushLogs();
-            break;
-          case 'l':
-            await log();
-            break;
+          case 'connect':
           case 'c':
             await connect();
             break;
+          case 'connect wireless':
           case 'cw':
             if (global.deviceIP)
               await connectOverWIFIWithIP(global.deviceIP);
@@ -83,13 +85,26 @@ function handleInputs() {
           case 'exit':
             process.exit();
             break;
+          case 'f':
           case 'flush':
+            await flushLogs();
             logger.success('Log file flushed');
             logger.flush();
             break;
+          case 'ir':
+            await install();
+            await restart();
+            break;
+          case 'sl':
+            await stopLog();
+            break;
           default:
             let words = command.split(' ');
-            console.log(`${command}: Command not Found`);
+            if (words[0] === 'll' || words[0] === 'live log') {
+              await liveLog(words[1] || 'SystemWebChromeClient');
+            } else {
+              console.log(`${command}: Command not Found`);
+            }
             break;
         }
       } catch (error) {
@@ -105,22 +120,22 @@ function handleInputs() {
 function setup() {
   let noIP = true;
   let configured = false;
-  process.argv.forEach((arg, index, array)=>{
-    if(arg === '--debug'){
+  process.argv.forEach((arg, index, array) => {
+    if (arg === '--debug') {
       global.loggingLevel = 'debug';
     }
-    if(arg === '-p'){
-      global.packageAbsolutePath = array[index+1];
+    if (arg === '-p') {
+      global.packageAbsolutePath = array[index + 1];
     }
-    if(arg === '-n'){
-      global.packageName = array[index+1];
+    if (arg === '-n') {
+      global.packageName = array[index + 1];
     }
-    if(arg === '--ip'){
+    if (arg === '--ip') {
       noIP = false;
     }
-    if(arg.includes('.js') && index > 1){
+    if (arg.includes('.js') && index > 1) {
       const configPath = path.join(process.cwd(), arg);
-      if(!fs.existsSync(configPath)){
+      if (!fs.existsSync(configPath)) {
         console.log('\x1b[31m%s\x1b[0m', 'Config File not Exists');
         process.exit();
       }
@@ -129,9 +144,9 @@ function setup() {
       configured = true;
     }
   });
-  if(noIP)
+  if (noIP)
     delete global.deviceIP;
-  if(!configured){
+  if (!configured) {
     console.log('\x1b[31m%s\x1b[0m', 'Config File not Specified');
     process.exit();
   }
