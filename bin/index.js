@@ -1,8 +1,8 @@
-const stdin = process.openStdin();
-const { install, restart, flushLogs, log } = require('./build');
-const { connect, connectOverWIFI } = require('./connect');
-const { logger } = require('./utils');
-let state = 'init';
+#!/usr/bin/env node
+
+const { install, restart, flushLogs, log } = require('../lib/build');
+const { connect, connectOverWIFI } = require('../lib/connect');
+const { logger } = require('../lib/utils');
 let helpMessage = 'Available Commands:\n' +
   ' i\t remove the package from device and install it again\n' +
   ' r\t restart the application\n' +
@@ -10,6 +10,19 @@ let helpMessage = 'Available Commands:\n' +
   ' cw\t connect to the device only over wifi\n' +
   ' f\t flush all logs\n' +
   ' l\t monitor logs\n';
+
+global.loggingLevel = 'info';
+process.argv.forEach((arg, index, array)=>{
+  if(arg === '--debug'){
+    global.loggingLevel = 'debug';
+  }
+  if(arg === '-p'){
+    global.packageAbsolutePath = array[index+1];
+  }
+  if(arg === '-n'){
+    global.packageName = array[index+1];
+  }
+});
 
 process.stdin.on('data', async function(data) {
   return new Promise(async(resolve, reject) => {

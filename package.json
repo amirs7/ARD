@@ -1,6 +1,6 @@
 {
   "name": "android-remote-debugger",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,10 +13,15 @@
   "keywords": [
     "Android"
   ],
+  "bin": {
+    "remote-debugger": "./bin/index.js"
+  },
+  "preferGlobal": true,
   "author": "Amir Hossein Seyhani <aseyhani@icloud.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/amirs7/ARD/issues"
   },
-  "homepage": "https://github.com/amirs7/ARD#readme"
+  "homepage": "https://github.com/amirs7/ARD#readme",
+  "dependencies": {}
 }
