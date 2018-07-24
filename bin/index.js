@@ -75,7 +75,7 @@ function configure() {
     logger.error('Package .apk File Path not Specified');
     process.exit();
   }
-  global.packageAbsolutePath = global.packagePath[0];
+  global.packageAbsolutePath = global.packagePath;
   if (global.packagePath[0] !== '/') {
     global.packageAbsolutePath = path.join(process.cwd(), global.packagePath);
   }

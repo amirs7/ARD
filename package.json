@@ -1,6 +1,6 @@
 {
   "name": "android-remote-debugger",
-  "version": "2.3.4",
+  "version": "2.3.6",
   "description": "",
   "main": "index.js",
   "scripts": {
