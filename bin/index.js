@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const path = require('path');
 const fs = require('fs');
-const { logger } = require('../lib/utils');
+const { logger } = require('../lib/utils/index');
 const commandHandler = require('../lib/main/command');
 const config = require('../lib/config');
 let helpMessage = 'Available Commands:\n' +
@@ -16,6 +16,9 @@ let helpMessage = 'Available Commands:\n' +
   ' ll\t monitor logs\n' +
   ' sl, stop live logging\n';
 
+const Debugger = require('../lib/debugger');
+
+
 (() => {
 
   global.loggingLevel = 'info';
@@ -24,7 +27,8 @@ let helpMessage = 'Available Commands:\n' +
 
   configure();
 
-  commandHandler();
+  let remoteDebugger = new Debugger(global);
+  commandHandler(remoteDebugger);
 })();
 
 function setup() {
@@ -79,6 +83,7 @@ function configure() {
   if (global.packagePath[0] !== '/') {
     global.packageAbsolutePath = path.join(process.cwd(), global.packagePath);
   }
+
   if (!global.packageAbsolutePath.includes('.apk')) {
     console.log('\x1b[33m%s\x1b[0m', 'Warning: Package File is not .apk');
   }
