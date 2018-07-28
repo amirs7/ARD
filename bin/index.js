@@ -2,51 +2,47 @@
 const path = require('path');
 const fs = require('fs');
 const { logger } = require('../lib/utils/index');
-const commandHandler = require('../lib/main/command');
-const config = require('../lib/config');
-let helpMessage = 'Available Commands:\n' +
-  ' i, install\t remove the package from device and install it again\n' +
-  ' u, update\t install the application preserving data and settings\n' +
-  ' r, restart\t restart the application\n' +
-  ' c, connect\t connect to the device over wifi\n' +
-  ' w, watch\t enter watch mode\n' +
-  ' ew, end watch\t end watch mode\n' +
-  ' cw, connect wifi\t connect to the device only over wifi\n' +
-  ' f, flush\t flush all logs\n' +
-  ' ll\t monitor logs\n' +
-  ' sl, stop live logging\n';
+const { commandHandler, helpMessage } = require('../lib/main/command');
+const config = require('../config');
 
 const Debugger = require('../lib/debugger');
-
+const packageJson = require(path.join(process.env['NVM_PATH'],'../node_modules/android-remote-debugger/package.json'));
 
 (() => {
 
   global.loggingLevel = 'info';
 
-  setup();
-
-  configure();
-
-  let remoteDebugger = new Debugger(global);
+  let config = setup();
+  config = configure(config);
+  let remoteDebugger = new Debugger(config);
   commandHandler(remoteDebugger);
 })();
 
 function setup() {
+  let config = {};
   let noIP = true;
   let configured = false;
   process.argv.forEach((arg, index, array) => {
     if (arg === '--debug') {
       global.loggingLevel = 'debug';
     }
+    if (arg === '--version') {
+      console.log();
+      console.log(`\nAndroid Remote Debugger v${packageJson.version}`);
+      console.log(`Wiki and Documentation: https://github.com/amirs7/ARD/wiki\n`);
+      process.exit();
+    }
     if (arg === '--help') {
+      console.log(`\nAndroid Remote Debugger v${packageJson.version}`);
+      console.log(`Wiki and Documentation: https://github.com/amirs7/ARD/wiki\n`);
       console.log(helpMessage);
       process.exit();
     }
     if (arg === '-p') {
-      global.packageAbsolutePath = array[index + 1];
+      config.packageAbsolutePath = array[index + 1];
     }
     if (arg === '-n') {
-      global.packageName = array[index + 1];
+      config.packageName = array[index + 1];
     }
     if (arg === '--ip') {
       noIP = false;
@@ -57,44 +53,46 @@ function setup() {
         console.log('\x1b[31m%s\x1b[0m', 'Config File not Exists');
         process.exit();
       }
-      const config = require(configPath);
-      Object.assign(global, config);
+      config = require(configPath);
       configured = true;
     }
   });
   if (noIP)
-    delete global.deviceIP;
+    delete config.deviceIP;
   if (!configured) {
     console.log('\x1b[31m%s\x1b[0m', 'Config File not Specified');
     process.exit();
   }
+  return config;
 }
 
-function configure() {
-  if (!global.packageName) {
+function configure(config) {
+  if (!config.packageName) {
     logger.error('Package Name not Specified');
     process.exit();
   }
-  if (!global.packagePath) {
+  if (!config.packagePath) {
     logger.error('Package .apk File Path not Specified');
     process.exit();
   }
-  global.packageAbsolutePath = global.packagePath;
-  if (global.packagePath[0] !== '/') {
-    global.packageAbsolutePath = path.join(process.cwd(), global.packagePath);
+  config.packageAbsolutePath = config.packagePath;
+  if (config.packagePath[0] !== '/') {
+    config.packageAbsolutePath = path.join(process.cwd(), config.packagePath);
   }
 
-  if (!global.packageAbsolutePath.includes('.apk')) {
-    console.log('\x1b[33m%s\x1b[0m', 'Warning: Package File is not .apk');
+  if (!config.packageAbsolutePath.includes('.apk')) {
+
+    logger.warning('Warning: Package File is not .apk');
   }
-  if (!fs.existsSync(global.packageAbsolutePath)) {
-    console.log('\x1b[33m%s\x1b[0m', 'Warning: Package File not Exists at Specified Path');
+  if (!fs.existsSync(config.packageAbsolutePath)) {
+    logger.warning('Warning: Package File not Exists at Specified Path');
   }
 
   logger.success('Debugger Started');
   logger.info(`Configuration:\n`
-    + ` Package Name:\t${global.packageName}\n`
-    + ` Package Path:\t${global.packageAbsolutePath}\n`
-    + ` Using IP:\t${global.deviceIP ? global.deviceIP : 'No'}\n`
-    + ` Server Port:\t${global.ADBPort ? global.ADBPort : 'Default'}\n`);
+    + ` Package Name:\t${config.packageName}\n`
+    + ` Package Path:\t${config.packageAbsolutePath}\n`
+    + ` Using IP:\t${config.deviceIP ? config.deviceIP : 'No'}\n`
+    + ` Server Port:\t${config.ADBPort ? config.ADBPort : 'Default'}\n`);
+  return config;
 }

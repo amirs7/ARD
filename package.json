@@ -1,6 +1,6 @@
 {
   "name": "android-remote-debugger",
-  "version": "2.3.6",
+  "version": "2.5.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -23,5 +23,7 @@
     "url": "https://github.com/amirs7/ARD/issues"
   },
   "homepage": "https://github.com/amirs7/ARD#readme",
-  "dependencies": {}
+  "dependencies": {
+    "xml2js": "^0.4.19"
+  }
 }
