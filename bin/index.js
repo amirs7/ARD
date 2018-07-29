@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 const path = require('path');
 const fs = require('fs');
-const { logger } = require('../lib/utils/index');
+const { logger, checkForUpdate } = require('../lib/utils/index');
 const { commandHandler, helpMessage } = require('../lib/main/command');
 const config = require('../config');
 
 const Debugger = require('../lib/debugger');
-const packageJson = require(path.join(process.env['NVM_PATH'],'../node_modules/android-remote-debugger/package.json'));
+let packageJson;
+if (fs.existsSync(path.join(process.env['NVM_PATH'], '../node_modules/android-remote-debugger/package.json')))
+  packageJson = require(path.join(process.env['NVM_PATH'], '../node_modules/android-remote-debugger/package.json'));
 
 (() => {
 
@@ -15,6 +17,8 @@ const packageJson = require(path.join(process.env['NVM_PATH'],'../node_modules/a
   let config = setup();
   config = configure(config);
   let remoteDebugger = new Debugger(config);
+  if(packageJson)
+    checkForUpdate(packageJson.version);
   commandHandler(remoteDebugger);
 })();
 
