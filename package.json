@@ -1,6 +1,6 @@
 {
   "name": "android-remote-debugger",
-  "version": "2.6.5",
+  "version": "2.7.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -24,5 +24,6 @@
   },
   "homepage": "https://github.com/amirs7/ARD#readme",
   "dependencies": {
+    "uiautomator-server": "^2.0.1"
   }
 }
