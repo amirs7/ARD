@@ -4,23 +4,12 @@ const fs = require('fs');
 const { logger, checkForUpdate } = require('../lib/utils/index');
 const { commandHandler, helpMessage } = require('../lib/main/command');
 const config = require('../config');
+const Terminal = require('../lib/utils/terminal');
 
 const Debugger = require('../lib/debugger');
 let packageJson;
 if (fs.existsSync(path.join(process.env['NVM_PATH'], '../node_modules/android-remote-debugger/package.json')))
   packageJson = require(path.join(process.env['NVM_PATH'], '../node_modules/android-remote-debugger/package.json'));
-
-(() => {
-
-  global.loggingLevel = 'info';
-
-  let config = setup();
-  config = configure(config);
-  let remoteDebugger = new Debugger(config);
-  if(packageJson)
-    checkForUpdate(packageJson.version);
-  commandHandler(remoteDebugger);
-})();
 
 function setup() {
   let config = {};
@@ -100,3 +89,18 @@ function configure(config) {
     + ` Server Port:\t${config.ADBPort ? config.ADBPort : 'Default'}\n`);
   return config;
 }
+
+const whatsNew = `What's New: \n\tUnlock command has been added. read more at https://github.com/amirs7/ARD/wiki#version-280-released`;
+
+(() => {
+  global.loggingLevel = 'info';
+  process.env.testtest = 'salamalam';
+  let config = setup();
+  config = configure(config);
+  let remoteDebugger = new Debugger(config);
+  if(packageJson){
+    checkForUpdate(packageJson.version);
+    //logger.info(whatsNew);
+  }
+  let terminal = new Terminal(commandHandler(remoteDebugger));
+})();
